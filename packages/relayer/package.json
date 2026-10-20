@@ -1,0 +1,18 @@
+{
+  "name": "@apptochain/relayer",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Validates and submits signed ERC-2771 requests so app users pay no gas.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.0",
+    "express": "^4.21.0"
+  }
+}

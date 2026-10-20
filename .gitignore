@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+*.log
+relay-log.jsonl
+packages/contracts/artifacts/
+packages/contracts/cache/
+packages/contracts/typechain-types/
+packages/contracts/coverage/
+packages/contracts/deployments/localhost.json
+packages/contracts/deployments/hardhat.json
+chain.log
+relayer.log
+.env.local
+.env.*.local

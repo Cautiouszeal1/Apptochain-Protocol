@@ -1,0 +1,25 @@
+{
+  "name": "apptochain",
+  "private": true,
+  "description": "apptochain monorepo — Phase 2 Builder Alpha",
+  "workspaces": [
+    "packages/contracts",
+    "packages/sdk",
+    "packages/relayer",
+    "apps/demo"
+  ],
+  "scripts": {
+    "build": "npm run abis -w @apptochain/contracts && npm run build -w @apptochain/sdk && npm run build -w @apptochain/demo",
+    "test": "npm test -w @apptochain/contracts && node scripts/e2e.mjs",
+    "test:contracts": "npm test -w @apptochain/contracts",
+    "e2e": "node scripts/e2e.mjs",
+    "chain": "npm run node -w @apptochain/contracts",
+    "deploy:local": "npm run deploy:local -w @apptochain/contracts",
+    "relayer": "npm start -w @apptochain/relayer",
+    "demo": "npm run dev -w @apptochain/demo",
+    "setup:local": "node scripts/setup-local.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

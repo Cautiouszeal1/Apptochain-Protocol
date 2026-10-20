@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>apptochain sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+<header class="bar">
+  <span class="logo">app<i>to</i>chain <small>sandbox</small></span>
+  <button class="btn p" id="connect">Connect wallet</button>
+</header>
+<main>
+  <p class="eyebrow">Builder Alpha · Phase 2</p>
+  <h1>Connect. Map. Launch.</h1>
+  <p class="lead">This sandbox walks through the three steps with real contracts. As the builder you deploy a membership pass and a points program. Then, as a user, you claim a pass and earn points without paying gas.</p>
+  <p class="status mono" id="net"></p>
+
+  <section class="card">
+    <span class="n">STEP 01 · CONNECT</span>
+    <h2>Your wallet</h2>
+    <p id="who" class="mono">Not connected.</p>
+    <button class="btn" id="signin" disabled>Sign in with wallet</button>
+  </section>
+
+  <section class="card">
+    <span class="n">STEP 02 · LAUNCH (builder)</span>
+    <h2>Deploy your modules</h2>
+    <p>One transaction each. You become the owner. Addresses are remembered in this browser.</p>
+    <div class="row">
+      <button class="btn" id="dep-m" disabled>Deploy membership pass</button>
+      <button class="btn" id="dep-r" disabled>Deploy points program</button>
+    </div>
+    <p class="mono small" id="mods"></p>
+  </section>
+
+  <section class="card">
+    <span class="n">STEP 03 · MAPPED ACTIONS (user, gasless)</span>
+    <h2>Use the app</h2>
+    <p>The SDK maps these two app features to on-chain actions. You only sign a request, and the relayer pays the gas.</p>
+    <div class="row">
+      <button class="btn p" id="claim" disabled>Claim free pass</button>
+      <button class="btn p" id="earn" disabled>Earn 10 points</button>
+    </div>
+    <div class="tiles">
+      <div class="tile"><small>PASSES HELD</small><b id="passes">—</b></div>
+      <div class="tile"><small>POINTS</small><b id="points">—</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="n">ACTIVITY</span>
+    <ol id="log" class="mono small"></ol>
+  </section>
+</main>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

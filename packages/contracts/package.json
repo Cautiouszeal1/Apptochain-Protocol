@@ -1,0 +1,24 @@
+{
+  "name": "@apptochain/contracts",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "apptochain smart contracts: factory, forwarder, treasury and app templates.",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "abis": "hardhat compile && node scripts/export-abis.js",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network baseSepolia",
+    "deploy:base": "hardhat run scripts/deploy.js --network base"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "5.6.1",
+    "@openzeppelin/contracts-upgradeable": "5.6.1",
+    "dotenv": "^17.0.0",
+    "hardhat": "^2.22.0",
+    "solc": "0.8.24"
+  }
+}

@@ -21,6 +21,11 @@ fs.writeFileSync(path.join(root, "packages", "relayer", ".env"), [
   `FACTORY_ADDRESS=${dep.factory}`,
   "API_KEYS=",
   "CORS_ORIGINS=",
+  "# Local-only secret for dashboard sign-in. Use a real random value in production.",
+  "SESSION_SECRET=local-dev-session-secret-change-me",
+  "ALLOW_SANDBOX=true",
+  "# Empty = in-memory storage (keys reset when the relayer restarts)",
+  "DATABASE_URL=",
   "RATE_LIMIT_PER_MINUTE=30",
   "",
 ].join("\n"));
@@ -34,5 +39,13 @@ fs.writeFileSync(path.join(root, "apps", "demo", ".env.local"), [
   "",
 ].join("\n"));
 
-console.log("Wrote packages/relayer/.env and apps/demo/.env.local for the local chain.");
+fs.writeFileSync(path.join(root, "apps", "dashboard", ".env.local"), [
+  "VITE_NETWORK=localhost",
+  "VITE_RELAYER_URL=http://localhost:8787",
+  `VITE_FACTORY_ADDRESS=${dep.factory}`,
+  `VITE_FORWARDER_ADDRESS=${dep.forwarder}`,
+  "",
+].join("\n"));
+
+console.log("Wrote packages/relayer/.env, apps/demo/.env.local and apps/dashboard/.env.local for the local chain.");
 console.log(`Factory ${dep.factory}\nForwarder ${dep.forwarder}`);

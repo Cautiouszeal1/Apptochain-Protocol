@@ -11,7 +11,10 @@
     "node": "hardhat node",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network baseSepolia",
-    "deploy:base": "hardhat run scripts/deploy.js --network base"
+    "deploy:base": "hardhat run scripts/deploy.js --network base",
+    "upgrade-templates:sepolia": "hardhat run scripts/upgrade-templates.js --network baseSepolia",
+    "upgrade-templates:local": "hardhat run scripts/upgrade-templates.js --network localhost",
+    "coverage": "hardhat coverage"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

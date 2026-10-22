@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # apptochain local dev launcher for macOS / Linux.
-# Starts the local chain, deploys, writes env files, starts the relayer, then runs the demo.
+# Starts the local chain, deploys, writes env files, starts the relayer and dashboard, then runs the demo.
 # Run from the project folder:  bash scripts/dev.sh      Stop everything with Ctrl+C.
 set -e
 cd "$(dirname "$0")/.."
@@ -27,12 +27,15 @@ echo "Deploying contracts..."
 npm run deploy:local
 npm run setup:local
 
-echo "Starting relayer..."
+echo "Starting relayer and dashboard..."
 npm run relayer > relayer.log 2>&1 &
+pids+=($!)
+npm run dashboard > dashboard.log 2>&1 &
 pids+=($!)
 
 echo
-echo "Open http://localhost:5173"
+echo "Demo:      http://localhost:5173"
+echo "Dashboard: http://localhost:5174"
 echo "MetaMask: add network RPC http://127.0.0.1:8545, chain ID 31337, symbol ETH."
 echo "Import test key (LOCAL ONLY): 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
 echo

@@ -61,7 +61,7 @@ contract ATCAssets is ERC2771ContextUpgradeable, ERC1155Upgradeable, ATCTemplate
         if (!it.exists) revert UnknownItem(id);
         uint256 due = it.price * amount;
         if (msg.value != due) revert WrongPayment(due, msg.value);
-        _takeNativeFee(msg.value);
+        _takeNativeFee(msg.value); // remainder stays here until the owner withdraws
         _issue(_msgSender(), id, amount);
     }
 
@@ -70,7 +70,12 @@ contract ATCAssets is ERC2771ContextUpgradeable, ERC1155Upgradeable, ATCTemplate
         _issue(to, id, amount);
     }
 
-    function setURI(string calldata u) external onlyOwner { _setURI(u); }
+    event URISet(string uri);
+
+    function setURI(string calldata u) external onlyOwner {
+        _setURI(u);
+        emit URISet(u);
+    }
 
     function _issue(address to, uint256 id, uint256 amount) internal {
         Item storage it = items[id];

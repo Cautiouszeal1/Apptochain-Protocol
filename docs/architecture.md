@@ -30,9 +30,17 @@ The relayer runs these checks in order, cheapest first:
 6. `staticCall` simulation, so the relayer never pays for a failing transaction (revert reasons are decoded)
 7. Daily quota per app, then submit through a mutex so nonces stay ordered
 
-Every request is logged to `relay-log.jsonl`. Watch `/health` for `lowBalance`.
+Every request is logged to `relay-log.jsonl` and, when `DATABASE_URL` is set, to Postgres for the dashboard. Watch `/health` for `lowBalance`, or set `ALERT_WEBHOOK_URL` to be pinged.
 
-Known alpha limits: rate limits are in memory (one instance only) and there is no gas-price ceiling yet. Both are Phase 3 items.
+### API keys and the dashboard (Phase 3)
+
+- Builders sign in with a free wallet signature (`/v1/auth/nonce` then `/v1/auth/verify`). Nonces are single-use and expire after 10 minutes. Sessions are HMAC-signed tokens valid for 7 days.
+- Keys look like `atc_…`. Only a SHA-256 hash is stored, so the full key is shown once at creation.
+- **A key only sponsors modules owned by the builder who created it.** The relayer reads `owner()` on the target module. A leaked key can't be used to spend gas on someone else's contracts.
+- Every relay is recorded against the module owner, which powers the usage chart and the gas-sponsored total.
+- `ALLOW_SANDBOX=true` lets requests without a key through (the public demo). Set it to `false` when you're ready to require keys.
+
+Known limits: rate limits and sign-in nonces are in memory, so run **one** relayer instance until they move to Redis. That's a Phase 3 item.
 
 ## Why "relayer", not "bridge"
 

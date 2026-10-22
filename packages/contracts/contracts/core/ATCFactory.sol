@@ -24,7 +24,7 @@ contract ATCFactory is IATCFactory, Ownable2Step {
     event ImplementationSet(bytes32 indexed kind, address impl);
     event AppDeployed(address indexed owner, bytes32 indexed kind, address app, string appId);
     event FeesUpdated(uint256 deploymentFee, uint16 protocolFeeBps);
-    event TreasurySet(address treasury);
+    event TreasurySet(address indexed treasury);
 
     error UnknownKind(bytes32 kind);
     error FeeTooHigh();

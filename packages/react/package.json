@@ -1,0 +1,36 @@
+{
+  "name": "@apptochain/react",
+  "version": "0.1.0-beta.0",
+  "description": "React and React Native hooks for apptochain: connect, run gasless actions, read modules.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "echo \"Hooks are tested in scripts/e2e.mjs (step 9): run npm test from the repo root\""
+  },
+  "peerDependencies": {
+    "@apptochain/sdk": "0.1.0-alpha.0",
+    "ethers": "^6.13.0",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "react": "^18.3.1",
+    "react-test-renderer": "^18.3.1",
+    "typescript": "^5.6.0"
+  },
+  "react-native": "./dist/index.js"
+}

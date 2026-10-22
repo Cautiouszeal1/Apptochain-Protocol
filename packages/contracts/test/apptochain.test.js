@@ -96,6 +96,54 @@ describe("ATCMembership", () => {
   });
 });
 
+describe("Security review fixes (v1.1.0)", () => {
+  it("hasPass respects expiry; validUntil reports the best expiry", async () => {
+    const { factory, appOwner, user, other } = await setup();
+    const m = await deployModule(factory, appOwner, "MEMBERSHIP", MEMBERSHIP_T, ["Club", "CLB", "", 0, 10 * 86400, 0]);
+    expect(await m.hasPass(user.address)).to.equal(false);
+    expect(await m.validUntil(user.address)).to.equal(0n);
+    await m.connect(user).mint();
+    expect(await m.hasPass(user.address)).to.equal(true);
+    await ethers.provider.send("evm_increaseTime", [11 * 86400]);
+    await ethers.provider.send("evm_mine");
+    expect(await m.hasPass(user.address)).to.equal(false, "expired pass must not grant access");
+    await m.connect(user).renew(1);
+    expect(await m.hasPass(user.address)).to.equal(true);
+    // transferring the pass moves access with it
+    await m.connect(user).transferFrom(user.address, other.address, 1);
+    expect(await m.hasPass(user.address)).to.equal(false);
+    expect(await m.hasPass(other.address)).to.equal(true);
+    // a never-expiring pass reports max
+    const forever = await deployModule(factory, appOwner, "MEMBERSHIP", MEMBERSHIP_T, ["Life", "LIFE", "", 0, 0, 0]);
+    await forever.connect(user).mint();
+    expect(await forever.validUntil(user.address)).to.equal(2n ** 64n - 1n);
+  });
+
+  it("supports ERC-721 Enumerable and ERC-4906, emits metadata events", async () => {
+    const { factory, appOwner, user } = await setup();
+    const m = await deployModule(factory, appOwner, "MEMBERSHIP", MEMBERSHIP_T, ["Club", "CLB", "", 0, 0, 0]);
+    expect(await m.supportsInterface("0x780e9d63")).to.equal(true); // ERC721Enumerable
+    expect(await m.supportsInterface("0x49064906")).to.equal(true); // ERC-4906
+    expect(await m.TEMPLATE_VERSION()).to.equal("1.1.0");
+    await m.connect(user).mint();
+    await expect(m.connect(appOwner).setBaseURI("ipfs://new/")).to.emit(m, "BaseURISet").and.to.emit(m, "BatchMetadataUpdate").withArgs(1, 1);
+    const a = await deployModule(factory, appOwner, "ASSETS", ["string", "string"], ["Shop", "ipfs://a/{id}"]);
+    await expect(a.connect(appOwner).setURI("ipfs://b/{id}")).to.emit(a, "URISet");
+  });
+
+  it("owner can withdraw with an event and rescue stray tokens; others cannot", async () => {
+    const { factory, appOwner, user, other } = await setup({ feeBps: 0 });
+    const m = await deployModule(factory, appOwner, "MEMBERSHIP", MEMBERSHIP_T, ["Club", "CLB", "", ethers.parseEther("1"), 0, 0]);
+    await m.connect(user).mint({ value: ethers.parseEther("1") });
+    await expect(m.connect(appOwner).withdraw(other.address)).to.emit(m, "Withdrawn").withArgs(other.address, ethers.parseEther("1"));
+    const usdc = await (await ethers.getContractFactory("MockUSDC")).deploy();
+    await usdc.mint(await m.getAddress(), 5_000000n);
+    await expect(m.connect(user).rescueToken(await usdc.getAddress(), user.address, 1)).to.be.revertedWithCustomError(m, "OwnableUnauthorizedAccount");
+    await expect(m.connect(appOwner).rescueToken(await usdc.getAddress(), appOwner.address, 5_000000n)).to.emit(m, "TokenRescued");
+    expect(await usdc.balanceOf(appOwner.address)).to.equal(5_000000n);
+  });
+});
+
 describe("ATCAssets", () => {
   it("creates items, sells within supply, owner airdrops", async () => {
     const { factory, appOwner, user } = await setup({ feeBps: 0 });

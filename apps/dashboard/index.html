@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>apptochain dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d94a14'/%3E%3Cpath d='M9 22l7-12 7 12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+<header class="bar">
+  <span class="logo">app<i>to</i>chain <small>dashboard</small></span>
+  <span class="net mono" id="net"></span>
+  <button class="btn" id="account" hidden></button>
+</header>
+
+<!-- Signed-out gate -->
+<section id="gate" class="gate">
+  <p class="eyebrow">Builder dashboard · Phase 3</p>
+  <h1>Your apps, on-chain.</h1>
+  <p class="lead">Sign in with the wallet you build with. You'll see the modules you've deployed, create API keys for your relayer access, and track the gas you've sponsored for your users.</p>
+  <button class="btn p big" id="signin">Connect &amp; sign in</button>
+  <p class="hint">Signing in is a free signature. It doesn't move funds or cost gas.</p>
+  <p class="err" id="gate-err" role="alert"></p>
+</section>
+
+<!-- Signed-in app -->
+<div id="app" hidden>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-tab="modules">Modules</button>
+    <button role="tab" data-tab="keys">API keys</button>
+    <button role="tab" data-tab="usage">Usage</button>
+    <button role="tab" data-tab="quickstart">Quickstart</button>
+  </nav>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section data-panel="overview">
+      <div class="tiles">
+        <div class="tile"><small>Modules</small><b id="t-modules">—</b></div>
+        <div class="tile"><small>Gasless actions · 14 days</small><b id="t-relays">—</b></div>
+        <div class="tile"><small>Gas you sponsored · 14 days</small><b id="t-gas">—</b></div>
+        <div class="tile"><small>Active API keys</small><b id="t-keys">—</b></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Recent gasless actions</h2><button class="link" data-goto="usage">View usage →</button></div>
+        <div id="recent" class="list"></div>
+      </div>
+      <div class="card" id="relayer-card">
+        <h2>Relayer</h2>
+        <p class="mono small" id="relayer-status">Checking…</p>
+      </div>
+    </section>
+
+    <!-- MODULES -->
+    <section data-panel="modules" hidden>
+      <div class="card">
+        <div class="card-h"><h2>Your modules</h2><button class="link" id="refresh-mods">Refresh</button></div>
+        <div id="mods" class="list"></div>
+      </div>
+      <div class="card">
+        <h2>Deploy a module</h2>
+        <p class="muted">One transaction from your wallet. You become the owner. The deploy fee (if any) goes to the protocol treasury.</p>
+        <form id="deploy-form" class="form">
+          <label>Type
+            <select name="kind" id="kind">
+              <option value="membership">Membership pass (ERC-721)</option>
+              <option value="assets">Digital items (ERC-1155)</option>
+              <option value="rewards">Points program (ERC-20)</option>
+              <option value="payments">Checkout (ETH / USDC)</option>
+            </select>
+          </label>
+          <div id="kind-fields"></div>
+          <button class="btn p" type="submit" id="deploy-btn">Deploy</button>
+          <p class="err" id="deploy-err" role="alert"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- API KEYS -->
+    <section data-panel="keys" hidden>
+      <div class="card">
+        <h2>Create an API key</h2>
+        <p class="muted">Your app sends this key to the relayer. A key only sponsors gas for modules <b>you</b> own, so a leaked key can't drain your budget on other people's contracts.</p>
+        <form id="key-form" class="form row">
+          <input name="name" placeholder="Key name, e.g. Production web app" maxlength="48" required />
+          <button class="btn p" type="submit">Create key</button>
+        </form>
+        <div id="new-key" class="newkey" hidden>
+          <p><b>Copy this key now.</b> It won't be shown again.</p>
+          <div class="copyrow"><code id="new-key-value"></code><button class="btn" id="copy-key">Copy</button></div>
+        </div>
+        <p class="err" id="key-err" role="alert"></p>
+      </div>
+      <div class="card">
+        <h2>Your keys</h2>
+        <div id="keys" class="list"></div>
+      </div>
+    </section>
+
+    <!-- USAGE -->
+    <section data-panel="usage" hidden>
+      <div class="card">
+        <div class="card-h">
+          <h2>Gasless actions per day</h2>
+          <div class="seg" role="group" aria-label="Range">
+            <button data-days="7">7d</button><button data-days="14" aria-pressed="true">14d</button><button data-days="30">30d</button>
+          </div>
+        </div>
+        <p class="muted small" id="usage-sum"></p>
+        <div id="chart" class="chart"></div>
+        <details><summary>View as table</summary><div id="usage-table"></div></details>
+      </div>
+    </section>
+
+    <!-- QUICKSTART -->
+    <section data-panel="quickstart" hidden>
+      <div class="card">
+        <div class="card-h"><h2>Add apptochain to your app</h2><button class="btn" id="copy-snippet">Copy code</button></div>
+        <ol class="steps">
+          <li>Install: <code>npm install @apptochain/sdk ethers</code></li>
+          <li>Create an API key in the <button class="link" data-goto="keys">API keys</button> tab.</li>
+          <li>Paste this into your app. Your addresses are already filled in.</li>
+        </ol>
+        <pre><code id="snippet"></code></pre>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

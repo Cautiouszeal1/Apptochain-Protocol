@@ -1,5 +1,5 @@
 import {
-  AbiCoder, BrowserProvider, Contract, JsonRpcProvider, getAddress, id as keccakId, parseEther, toBeHex,
+  AbiCoder, BrowserProvider, Contract, JsonRpcProvider, getAddress, hexlify, id as keccakId, parseEther, randomBytes,
   type Signer, type Eip1193Provider, type InterfaceAbi, type ContractTransactionReceipt,
 } from "ethers";
 import { ATCAssetsAbi, ATCFactoryAbi, ATCForwarderAbi, ATCMembershipAbi, ATCPaymentsAbi, ATCRewardsAbi } from "./abi/index.js";
@@ -10,6 +10,7 @@ import { discoverWallets, type DetectedWallet } from "./wallets.js";
 export * from "./networks.js";
 export * from "./relayer.js";
 export * from "./wallets.js";
+export * from "./builder.js";
 export * as abi from "./abi/index.js";
 
 export type ModuleKind = "membership" | "assets" | "rewards" | "payments";
@@ -52,6 +53,19 @@ export interface RunResult {
   via: "relayer" | "wallet";
   hash: string;
   wait: () => Promise<{ status: "confirmed" | "failed"; blockNumber?: number }>;
+}
+
+/** Event methods most EIP-1193 providers expose (optional). */
+type EventSource = {
+  on?: (event: string, cb: (...a: any[]) => void) => void;
+  removeListener?: (event: string, cb: (...a: any[]) => void) => void;
+};
+
+/** Random id that works in browsers, Node and React Native (with react-native-get-random-values). */
+function randomId(): string {
+  const c: any = (globalThis as any).crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  return hexlify(randomBytes(16)).slice(2);
 }
 
 const FORWARD_TYPES = {
@@ -97,17 +111,34 @@ export class AppToChain {
   async connect(wallet?: DetectedWallet): Promise<string> {
     const chosen = wallet ?? (await discoverWallets())[0];
     if (!chosen) throw new Error("No wallet found. Install MetaMask, Rabby or Coinbase Wallet, or open this app in a wallet browser.");
-    this.eip1193 = chosen.provider;
-    await chosen.provider.request({ method: "eth_requestAccounts" });
+    return this.connectProvider(chosen.provider);
+  }
+
+  /**
+   * Connect any EIP-1193 provider: an injected wallet, WalletConnect / Reown AppKit on
+   * mobile, an embedded wallet, etc. Requests accounts and switches to the configured network.
+   */
+  async connectProvider(provider: Eip1193Provider & EventSource): Promise<string> {
+    this.detach();
+    this.eip1193 = provider;
+    await provider.request({ method: "eth_requestAccounts" });
     await this.ensureNetwork();
-    this.signer = await new BrowserProvider(chosen.provider).getSigner();
+    this.signer = await new BrowserProvider(provider).getSigner();
     this.setAddress(await this.signer.getAddress());
-    chosen.provider.on?.("accountsChanged", async (a: string[]) => {
-      if (!a[0]) return this.disconnect();
-      this.signer = await new BrowserProvider(chosen.provider).getSigner();
+    const onAccounts = async (a: string[]) => {
+      if (!a?.[0]) return this.disconnect();
+      this.signer = await new BrowserProvider(provider).getSigner();
       this.setAddress(getAddress(a[0]));
-    });
+    };
+    provider.on?.("accountsChanged", onAccounts);
+    this.detachFn = () => provider.removeListener?.("accountsChanged", onAccounts);
     return this.address!;
+  }
+
+  private detachFn?: () => void;
+  private detach() {
+    this.detachFn?.();
+    this.detachFn = undefined;
   }
 
   /** Server-side or scripted use: bring your own ethers Signer (e.g. a Wallet). */
@@ -117,7 +148,13 @@ export class AppToChain {
     return this.address!;
   }
 
+  /** The connected ethers Signer (throws if not connected). */
+  getSigner(): Signer {
+    return this.requireSigner();
+  }
+
   disconnect(): void {
+    this.detach();
     this.signer = undefined;
     this.eip1193 = undefined;
     this.setAddress(null);
@@ -132,7 +169,7 @@ export class AppToChain {
   async ensureNetwork(): Promise<void> {
     const p = this.eip1193;
     if (!p) return;
-    const want = "0x" + this.network.chainId.toString(16);
+    const want = "0x" + this.network.chainId.toString(16); // MetaMask requires unpadded hex (0x14a34, not 0x014a34)
     const current = await p.request({ method: "eth_chainId" });
     if (parseInt(current, 16) === this.network.chainId) return;
     try {
@@ -155,7 +192,7 @@ export class AppToChain {
   /** Sign a free, human-readable message to prove wallet ownership (no funds move). */
   async signIn(statement = "Sign in to this app with apptochain."): Promise<{ address: string; message: string; signature: string }> {
     const s = this.requireSigner();
-    const message = `${statement}\nAddress: ${this.address}\nChain: ${this.network.chainId}\nNonce: ${crypto.randomUUID()}\nIssued: ${new Date().toISOString()}\nThis signature is free and does not move funds.`;
+    const message = `${statement}\nAddress: ${this.address}\nChain: ${this.network.chainId}\nNonce: ${randomId()}\nIssued: ${new Date().toISOString()}\nThis signature is free and does not move funds.`;
     return { address: this.address!, message, signature: await s.signMessage(message) };
   }
 

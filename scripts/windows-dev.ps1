@@ -24,11 +24,13 @@ Write-Host "Deploying contracts..." -ForegroundColor Cyan
 npm run deploy:local
 npm run setup:local
 
-Write-Host "Starting relayer and demo..." -ForegroundColor Cyan
+Write-Host "Starting relayer, demo and dashboard..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; npm run relayer"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; npm run demo"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root'; npm run dashboard"
 
 Write-Host ""
-Write-Host "Open http://localhost:5173" -ForegroundColor Green
+Write-Host "Demo:      http://localhost:5173" -ForegroundColor Green
+Write-Host "Dashboard: http://localhost:5174" -ForegroundColor Green
 Write-Host "MetaMask: add network RPC http://127.0.0.1:8545, chain ID 31337, symbol ETH."
 Write-Host "Import test key (LOCAL ONLY): 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"

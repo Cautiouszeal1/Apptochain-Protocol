@@ -6,20 +6,27 @@
 - [x] Relayer with verification, simulation, limits and logging
 - [x] Sandbox demo app
 - [x] End-to-end test of the full stack
-- [ ] **You:** deploy to Base Sepolia (see deploy-base.md) and host the relayer and demo
-- [ ] **You:** create the GitHub org `apptochain` and push this repo (the site already links to it)
-- [ ] **You:** a first security review. Run Slither and Aderyn (free static analysers) and fix the findings
+- [x] Deployed to Base Sepolia; relayer on Render, demo on Vercel
+- [x] Code on GitHub (`Cautiouszeal1/Apptochain-Protocol`)
+- [x] First security review: Slither + Aderyn + manual review, fixes in templates v1.1.0 (docs/security-review.md)
+- [ ] **You:** register v1.1.0 templates on Sepolia: `npm run upgrade-templates:sepolia -w @apptochain/contracts`
 - [ ] Publish the SDK to npm as `@apptochain/sdk@alpha`
 - [ ] Recruit 5–10 alpha builders and collect feedback on the SDK
 
 ## Phase 3 · Public Testnet (Q2 2027)
-- [ ] Relayer: Redis-backed limits, gas-price ceiling, auto top-up alerts, multiple instances
-- [ ] Builder dashboard: list modules, issue API keys, view usage from relay logs
-- [ ] Mobile SDK beta: React Native wrapper (WalletConnect / Reown AppKit)
+- [x] Builder dashboard: wallet sign-in, list and deploy modules, API keys, usage chart, quickstart
+- [x] Relayer: per-builder API keys (hashed, owner-bound), Postgres storage, gas-price ceiling, low-balance webhook alerts, local nonce tracking
+- [ ] **You:** Supabase database + dashboard on Vercel (see deploy-phase3.md)
+- [ ] Relayer: Redis-backed rate limits so it can run on several instances
+- [ ] Separate relayer wallet from the deployer wallet; move factory ownership to a Safe
+- [x] Mobile SDK beta: `@apptochain/react` hooks + Expo example with WalletConnect (Reown AppKit), bundles for Android (docs/mobile.md)
+- [ ] **You:** test the example on a real phone and report back
 - [ ] Embedded wallets (email or social login) for users with no wallet
-- [ ] Bug bounty: publish the scope (these contracts plus the relayer) on Immunefi or a simple security page
+- [x] Bug bounty scope and safe-harbour policy (SECURITY.md)
+- [ ] **You:** set reward amounts in SECURITY.md and turn on GitHub private vulnerability reporting
 - [ ] Ambassador programme pages
-- [ ] Rename "bridge" to "relayer" on the website and in the whitepaper
+- [x] Website says "relayer", links the demo, dashboard and code, and shows roadmap progress
+- [ ] Whitepaper v1.1: say "relayer" instead of "bridge"
 
 ## Phase 4 · Mainnet (Q3 2027)
 - [ ] Independent audit (budget roughly $15k–40k for this contract size), with fixes and a published report

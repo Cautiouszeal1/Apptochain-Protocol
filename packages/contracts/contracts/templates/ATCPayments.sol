@@ -11,6 +11,8 @@ import {ATCTemplateBase} from "./ATCTemplateBase.sol";
 
 /// @title ATCPayments
 /// @notice In-app checkout settled on-chain. Each order id can be paid once.
+///         Accept only standard ERC-20s (e.g. USDC): fee-on-transfer or rebasing tokens
+///         would deliver less than `amount` to the payee and treasury.
 ///         The protocol fee goes to the treasury, the rest straight to the merchant payee.
 ///         ERC-20 payments (e.g. USDC) work gasless: the buyer approves once, then signs.
 contract ATCPayments is ERC2771ContextUpgradeable, ATCTemplateBase {
@@ -23,8 +25,8 @@ contract ATCPayments is ERC2771ContextUpgradeable, ATCTemplateBase {
     mapping(bytes32 => bool) public paid;
 
     event Paid(bytes32 indexed orderId, address indexed payer, address indexed token, uint256 amount, uint256 fee);
-    event PayeeSet(address payee);
-    event TokenAccepted(address token, bool accepted);
+    event PayeeSet(address indexed payee);
+    event TokenAccepted(address indexed token, bool accepted);
 
     error AlreadyPaid(bytes32 orderId);
     error TokenNotAccepted(address token);

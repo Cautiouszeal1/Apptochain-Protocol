@@ -13,3 +13,6 @@ chain.log
 relayer.log
 .env.local
 .env.*.local
+dashboard.log
+packages/contracts/coverage.json
+apps/mobile/vendor/

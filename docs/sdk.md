@@ -74,3 +74,21 @@ Reads: `membership.isValid(id)`, `hasPass(user)`, `assets.items(id)`, `payments.
 ## Advanced
 
 `signForwardRequest(to, data, { gas, ttlSeconds })` returns a signed ERC-2771 request for any call on a module. You can send it with `new RelayerClient(url, apiKey).relay(req)`.
+
+## Builder account API (`BuilderClient`)
+
+Used by the dashboard, and handy for scripts:
+
+```ts
+import { BuilderClient } from "@apptochain/sdk";
+
+const builder = new BuilderClient("https://apptochain-relayer.onrender.com");
+await builder.signIn(signer);              // free signature, 7-day session
+const { key } = await builder.createKey("CI"); // shown once
+await builder.listKeys();                  // never includes the secret
+await builder.usage(14);                   // { days: [...], total, gasSponsoredEth }
+await builder.recentRelays(20);
+await builder.revokeKey(id);
+```
+
+Save `builder.session` and call `builder.restore(session)` to stay signed in.

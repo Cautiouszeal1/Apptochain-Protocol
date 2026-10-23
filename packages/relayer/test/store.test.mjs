@@ -47,14 +47,19 @@ async function suite(name, store) {
   assert.equal(await store.findKey(k.key), null, "revoked key unusable");
   assert.ok((await store.listKeys(OWNER))[0].revokedAt);
 
-  console.log(`  ✔ ${name} store: keys, revocation, usage, recent relays`);
+  const app = { name: "Ada", email: "ada@example.com", handle: "@ada", country: "Nigeria", role: "Developer", tracks: "Teach, Ship", firstContribution: "A thread on gasless claims", links: "", wallet: "" };
+  assert.equal((await store.saveAmbassador(app)).duplicate, false);
+  assert.equal((await store.saveAmbassador(app)).duplicate, true, "one application per email");
+  assert.equal((await store.listAmbassadors()).length, 1);
+
+  console.log(`  ✔ ${name} store: keys, revocation, usage, recent relays, ambassador applications`);
 }
 
 await suite("memory", new MemoryStore());
 
 if (process.env.TEST_DATABASE_URL) {
   const pg = await PgStore.create(process.env.TEST_DATABASE_URL);
-  await pg.q("DROP TABLE IF EXISTS atc_api_keys, atc_relays");
+  await pg.q("DROP TABLE IF EXISTS atc_api_keys, atc_relays, atc_ambassador_applications");
   await suite("postgres", pg);
   await pg.pool.end();
 } else {

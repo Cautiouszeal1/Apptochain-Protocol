@@ -35,6 +35,7 @@ class MemoryStore {
   constructor() {
     this.keys = [];
     this.relays = [];
+    this.ambassadors = [];
     this.seq = 0;
   }
   async init() {}
@@ -82,6 +83,12 @@ class MemoryStore {
     }
     return fillDays(days, [...by.values()].map((r) => ({ ...r, feeWei: r.feeWei.toString() })));
   }
+  async saveAmbassador(a) {
+    if (this.ambassadors.some((x) => x.email === a.email)) return { duplicate: true };
+    this.ambassadors.push({ ...a, id: this.ambassadors.length + 1, createdAt: new Date().toISOString() });
+    return { duplicate: false };
+  }
+  async listAmbassadors() { return [...this.ambassadors]; }
   async recentRelays(owner, limit) {
     const o = lc(owner);
     return this.relays.filter((r) => r.owner === o).slice(-limit).reverse()
@@ -124,6 +131,20 @@ class PgStore {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
     await this.q(`CREATE INDEX IF NOT EXISTS atc_relays_owner_time ON atc_relays (owner, created_at)`);
+    await this.q(`CREATE TABLE IF NOT EXISTS atc_ambassador_applications (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      handle TEXT,
+      country TEXT NOT NULL,
+      role TEXT NOT NULL,
+      tracks TEXT NOT NULL,
+      first_contribution TEXT NOT NULL,
+      links TEXT,
+      wallet TEXT,
+      status TEXT NOT NULL DEFAULT 'new',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`);
   }
   async createKey(owner, name) {
     const key = newKey();
@@ -167,6 +188,18 @@ class PgStore {
       [lc(owner), since],
     );
     return fillDays(days, rows);
+  }
+  async saveAmbassador(a) {
+    const { rowCount } = await this.q(
+      `INSERT INTO atc_ambassador_applications (name, email, handle, country, role, tracks, first_contribution, links, wallet)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (email) DO NOTHING`,
+      [a.name, a.email, a.handle, a.country, a.role, a.tracks, a.firstContribution, a.links, a.wallet],
+    );
+    return { duplicate: rowCount === 0 };
+  }
+  async listAmbassadors() {
+    const { rows } = await this.q(`SELECT * FROM atc_ambassador_applications ORDER BY id`);
+    return rows;
   }
   async recentRelays(owner, limit) {
     const { rows } = await this.q(

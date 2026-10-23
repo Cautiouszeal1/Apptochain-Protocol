@@ -159,7 +159,19 @@ try {
   const bad = await fetch(`${URL}/v1/auth/verify`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: n2.message, signature: await stranger.signMessage(n2.message) }) });
   ok(bad.status === 401, "cannot sign in as someone else's address");
 
-  console.log("9. React / React Native hooks…");
+  console.log("9. Ambassador applications…");
+  const post = (body) => fetch(`${URL}/v1/ambassadors`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const goodApp = { name: "Ada Obi", email: "ada@example.com", handle: "@ada", country: "Nigeria", role: "Developer", tracks: ["Teach", "Ship"], firstContribution: "A thread explaining gasless passes with the sandbox", consent: true };
+  const ap1 = await post(goodApp);
+  ok(ap1.status === 201 && (await ap1.json()).duplicate === false, "a valid application is stored");
+  ok((await (await post({ ...goodApp, email: "ADA@example.com" })).json()).duplicate === true, "duplicate email is detected");
+  const bad1 = await post({ ...goodApp, email: "nope", consent: true });
+  ok(bad1.status === 400 && /email/.test((await bad1.json()).error), "invalid email is rejected with a clear message");
+  ok((await post({ ...goodApp, email: "b@example.com", consent: false })).status === 400, "consent is required");
+  ok((await post({ ...goodApp, email: "c@example.com", tracks: ["Hack"] })).status === 400, "unknown contribution tracks are rejected");
+  ok((await post({ website: "spam" })).status === 201, "honeypot submissions are silently dropped");
+
+  console.log("10. React / React Native hooks…");
   const React = (await import("react")).default;
   const TR = (await import("react-test-renderer")).default;
   const hooks = await import("@apptochain/react");

@@ -99,3 +99,12 @@ This uses the deployer key already in `packages/contracts/.env` and costs a litt
 ## Later: close the sandbox
 
 Once real builders use API keys, set `ALLOW_SANDBOX=false` on Render. After that, every gasless action needs a key, and each key only pays gas for modules owned by the builder who created it.
+
+## Ambassador applications
+
+The website's ambassador form posts to the relayer (`POST /v1/ambassadors`). Applications are stored in Supabase, in the **atc_ambassador_applications** table, which the relayer creates automatically. View them in Supabase → **Table Editor**. Use the `status` column to track each one (`new`, `contacted`, `accepted`).
+
+The website must be allowed to call the relayer, so add it to `CORS_ORIGINS` on Render:
+```
+https://apptochain-sandbox.vercel.app,https://apptochain-dashboard.vercel.app,https://apptochain.vercel.app
+```

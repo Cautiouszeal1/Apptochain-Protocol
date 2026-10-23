@@ -86,6 +86,7 @@ export async function createApp(cfg) {
   const perSigner = new RateLimiter(cfg.perMinute, 60_000);
   const perIp = new RateLimiter(cfg.perMinute * 5, 60_000);
   const authLimiter = new RateLimiter(20, 60_000);
+  const applyLimiter = new RateLimiter(5, 60 * 60_000); // 5 applications per IP per hour
   const quota = new DailyQuota(cfg.dailyQuota);
   const sendLock = new Mutex();
   const appCache = new Map();   // module -> true (only positives cached)
@@ -306,6 +307,38 @@ export async function createApp(cfg) {
     } catch (e) {
       throw new HttpError(401, "BAD_SIGNATURE", e.message);
     }
+  }));
+
+  // ───────────── ambassador applications (public form on the website) ─────────────
+  const AMB_ROLES = ["Developer", "Content creator", "Community organiser", "Designer", "Student", "Other"];
+  const AMB_TRACKS = ["Teach", "Ship", "Host", "Help"];
+  app.post("/v1/ambassadors", wrap(async (req, res) => {
+    const b = req.body || {};
+    if (b.website) return res.status(201).json({ ok: true }); // honeypot: bots fill hidden fields
+    if (!applyLimiter.take(req.ip)) throw new HttpError(429, "RATE_LIMITED", "Too many applications from this network. Try again later.");
+    const str = (v, max) => String(v ?? "").trim().slice(0, max);
+    const a = {
+      name: str(b.name, 80),
+      email: str(b.email, 120).toLowerCase(),
+      handle: str(b.handle, 80),
+      country: str(b.country, 60),
+      role: str(b.role, 40),
+      tracks: (Array.isArray(b.tracks) ? b.tracks : []).filter((t) => AMB_TRACKS.includes(t)).join(", "),
+      firstContribution: str(b.firstContribution, 1000),
+      links: str(b.links, 500),
+      wallet: str(b.wallet, 42),
+    };
+    const bad = (m) => { throw new HttpError(400, "BAD_REQUEST", m); };
+    if (a.name.length < 2) bad("Please enter your name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)) bad("Please enter a valid email.");
+    if (a.country.length < 2) bad("Please enter your country.");
+    if (!AMB_ROLES.includes(a.role)) bad("Please choose what describes you best.");
+    if (!a.tracks) bad("Choose at least one way to contribute.");
+    if (a.firstContribution.length < 20) bad("Tell us a little more about your first contribution (20+ characters).");
+    if (a.wallet && !isAddress(a.wallet)) bad("That wallet address doesn't look right. Leave it empty if unsure.");
+    if (b.consent !== true) bad("Please agree to be contacted about the programme.");
+    const r = await store.saveAmbassador(a);
+    res.status(201).json({ ok: true, duplicate: r.duplicate });
   }));
 
   // ───────────── dashboard: keys and usage ─────────────
